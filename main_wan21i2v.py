@@ -212,7 +212,7 @@ def parse_args():
     parser.add_argument("--num_steps", type=int, default=50, help="Number of diffusion sampling steps.")
     parser.add_argument("--sa_drop_rate", type=float, default=0.75, help="Drop rate for sparse attention.")
     parser.add_argument("--p_remain_rates", type=float, default=0.3, help="Probability for keeping tokens.")
-    parser.add_argument("--enable_teacache", action="store_true", default=False, help="Enable teacher-cache acceleration.")
+    parser.add_argument("--enable_teacache", action="store_true", help="Enable teacher-cache acceleration.")
     parser.add_argument("--teacache_thresh", type=float, default=0.3, help="TeaCache thresh sparams.")
     parser.add_argument("--mode", type=str, default="sparse", choices=["sparse", "flash", "torch", "vanilla"], help="Inference mode.")
     parser.add_argument("--use_ret_steps",action="store_true",default=True,

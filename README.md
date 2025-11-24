@@ -24,7 +24,7 @@ Rectified SpaAttn rectifies sparse attention allocation with implicit full atten
 
 - Model Adaptation
   - [ ] Wan2.2 (I2V / T2V)
-  - [×] HunyuanVideo, Wan2.1 (I2V / T2V), Flux.1-dev
+  - [x] HunyuanVideo, Wan2.1 (I2V / T2V), Flux.1-dev
 - Engineering Optimization
   - [ ] FP8 Attention
   - [ ] RoPE & Norm Kernel

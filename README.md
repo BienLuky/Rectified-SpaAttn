@@ -24,7 +24,7 @@ Rectified SpaAttn rectifies sparse attention allocation with implicit full atten
 
 - Model Adaptation
   - [ ] Wan2.2 (I2V / T2V)
-  - [√] HunyuanVideo, Wan2.1 (I2V / T2V), Flux.1-dev
+  - [×] HunyuanVideo, Wan2.1 (I2V / T2V), Flux.1-dev
 - Engineering Optimization
   - [ ] FP8 Attention
   - [ ] RoPE & Norm Kernel
@@ -57,28 +57,28 @@ pip install flash-attn --no-build-isolation
 
 The running scripts are:
 ```bash
-python main_hunyuan.py  # Rectified SpaAttn with 2.50× speedup
-python main_hunyuan.py --enable_teacache # Rectified SpaAttn+TeaCache with 5.24× speedup
+python scripts/main_hunyuan.py  # Rectified SpaAttn with 2.50× speedup
+python scripts/main_hunyuan.py --enable_teacache # Rectified SpaAttn+TeaCache with 5.24× speedup
 ```
 
 ### Wan 2.1
 The running scripts are:
 ```bash
 # Text-to-Video
-python main_wan21t2v.py # Rectified SpaAttn with 1.68× speedup
-python main_wan21t2v.py --enable_teacache # Rectified SpaAttn+TeaCache with 4.61× speedup
+python scripts/main_wan21t2v.py # Rectified SpaAttn with 1.68× speedup
+python scripts/main_wan21t2v.py --enable_teacache # Rectified SpaAttn+TeaCache with 4.61× speedup
 
 # Image-to-Video
-python main_wan21i2v.py # Rectified SpaAttn with 1.81× speedup
-python main_wan21i2v.py --enable_teacache # Rectified SpaAttn+TeaCache with 8.97× speedup
+python scripts/main_wan21i2v.py # Rectified SpaAttn with 1.81× speedup
+python scripts/main_wan21i2v.py --enable_teacache # Rectified SpaAttn+TeaCache with 8.97× speedup
 ```
 
 ### Flux.1-dev
 
 The running scripts are:
 ```bash
-python main_upflux.py  # Rectified SpaAttn with 1.60× speedup
-python main_upflux.py --enable_teacache # Rectified SpaAttn+TeaCache with 4.15× speedup
+python scripts/main_upflux.py  # Rectified SpaAttn with 1.60× speedup
+python scripts/main_upflux.py --enable_teacache # Rectified SpaAttn+TeaCache with 4.15× speedup
 ```
 
 

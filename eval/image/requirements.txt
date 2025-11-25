@@ -1,0 +1,50 @@
+astunparse
+attrs
+brotlipy
+# clip==1.0
+openai_clip
+# conda
+# conda-build==3.23.3
+contourpy
+cycler
+# diffusers==0.24.0
+dnspython
+exceptiongroup
+expecttest
+fairscale
+fonttools
+ftfy
+future
+h11
+huggingface-hub
+hypothesis
+kiwisolver
+matplotlib
+mkl-fft
+mkl-service
+mpmath
+outcome
+packaging
+Pillow
+pyparsing
+python-dateutil
+python-etcd
+PyYAML
+regex
+selenium
+sniffio
+sortedcontainers
+sympy
+timm
+tokenizers
+torch
+torchelastic
+torchtext
+torchvision
+transformers
+trio
+trio-websocket
+types-dataclasses
+wsproto
+fairscale
+pytorch_fid

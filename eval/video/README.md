@@ -46,13 +46,15 @@ bash evaluation.sh
 
 
 ## Citation
-If you find Rectified SpaAttn is useful in your research or applications, please consider giving us a star 🌟 and citing it by the following BibTeX entry.
-
-```
-@article{liu2024timestep,
-  title={Timestep Embedding Tells: It's Time to Cache for Video Diffusion Model},
-  author={Liu, Feng and Zhang, Shiwei and Wang, Xiaofeng and Wei, Yujie and Qiu, Haonan and Zhao, Yuzhong and Zhang, Yingya and Ye, Qixiang and Wan, Fang},
-  journal={arXiv preprint arXiv:2411.19108},
-  year={2024}
+If you find [Rectified SpaAttn](https://arxiv.org/abs/2511.19835) is useful in your research or applications, please consider giving us a star 🌟 and citing it by the following BibTeX entry.
+```BibTeX
+@misc{liu2025rectifiedspaattnrevisitingattention,
+      title={Rectified SpaAttn: Revisiting Attention Sparsity for Efficient Video Generation}, 
+      author={Xuewen Liu and Zhikai Li and Jing Zhang and Mengjuan Chen and Qingyi Gu},
+      year={2025},
+      eprint={2511.19835},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2511.19835}, 
 }
 ```

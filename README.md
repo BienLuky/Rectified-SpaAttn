@@ -4,7 +4,7 @@
 
 <h5 align="center">
 
-[![arXiv](https://img.shields.io/badge/DilateQuant-2409.14307-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2409.14307)
+[![arXiv](https://img.shields.io/badge/Rectified_SpaAttn-2511.19835-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2511.19835)
 [![GitHub Stars](https://img.shields.io/github/stars/BienLuky/Rectified-SpaAttn.svg?style=social&label=Star&maxAge=60)](https://github.com/BienLuky/Rectified-SpaAttn)
  <br>
 
@@ -180,13 +180,16 @@ python scripts/main_upflux.py --enable_teacache # Rectified SpaAttn+TeaCache wit
 
 ## 📚 Citation
 
-If you find [Rectified SpaAttn]() useful or relevant to your research, please cite our paper:
+If you find [Rectified SpaAttn](https://arxiv.org/abs/2511.19835) is useful in your research or applications, please consider giving us a star 🌟 and citing it by the following BibTeX entry.
 ```BibTeX
-@article{zhang2025training,
-  title={Training-Free Efficient Video Generation via Dynamic Token Carving},
-  author={Zhang, Yuechen and Xing, Jinbo and Xia, Bin and Liu, Shaoteng and Peng, Bohao and Tao, Xin and Wan, Pengfei and Lo, Eric and Jia, Jiaya},
-  journal={arXiv preprint arXiv:2505.16864},
-  year={2025}
+@misc{liu2025rectifiedspaattnrevisitingattention,
+      title={Rectified SpaAttn: Revisiting Attention Sparsity for Efficient Video Generation}, 
+      author={Xuewen Liu and Zhikai Li and Jing Zhang and Mengjuan Chen and Qingyi Gu},
+      year={2025},
+      eprint={2511.19835},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2511.19835}, 
 }
 ```
 

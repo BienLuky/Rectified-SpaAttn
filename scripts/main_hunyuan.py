@@ -1,4 +1,5 @@
-import os, argparse
+import os, argparse, sys
+sys.path.append("../Rectified-SpaAttn")
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 import torch
 from diffusers import HunyuanVideoPipeline, HunyuanVideoTransformer3DModel

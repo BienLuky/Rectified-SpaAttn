@@ -81,6 +81,10 @@ python scripts/main_upflux.py  # Rectified SpaAttn with 1.60× speedup
 python scripts/main_upflux.py --enable_teacache # Rectified SpaAttn+TeaCache with 4.15× speedup
 ```
 
+## 📊 Evaluation Pipeline
+
+We provide a complete evaluation pipeline — including tool preparation, model generation, and result assessment — all organized within the `eval` directory.
+
 
 ## 🎥 Demo
 

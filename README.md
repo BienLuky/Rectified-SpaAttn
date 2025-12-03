@@ -11,7 +11,7 @@
 
 
 ## 🔥 News
-
+- [2025/12] Rectified SpaAttn is extended to CogVideoX1.5, achieving a 3× acceleration.
 - [2025/11] Rectified SpaAttn is open-sourced! HunyuanVideo, Wan2.1, and Flux.1-dev can be accelerated by 4-9×.
 
 ## 📖 Overview
@@ -23,7 +23,10 @@ Rectified SpaAttn rectifies sparse attention allocation with implicit full atten
 ## 📃 Open-source Plan
 
 - Model Adaptation
+  - [ ] Your models ☺️ 
+  - [ ] Flux.2 
   - [ ] Wan2.2 (I2V / T2V)
+  - [x] CogVideoX1.5 (I2V / T2V)
   - [x] HunyuanVideo, Wan2.1 (I2V / T2V), Flux.1-dev
 - Engineering Optimization
   - [ ] FP8 Attention
@@ -58,7 +61,7 @@ pip install flash-attn --no-build-isolation
 The running scripts are:
 ```bash
 python scripts/main_hunyuan.py  # Rectified SpaAttn with 2.50× speedup
-python scripts/main_hunyuan.py --enable_teacache # Rectified SpaAttn+TeaCache with 5.24× speedup
+python scripts/main_hunyuan.py --enable_teacache # Rectified SpaAttn+Cache with 5.24× speedup
 ```
 
 ### Wan 2.1
@@ -66,11 +69,11 @@ The running scripts are:
 ```bash
 # Text-to-Video
 python scripts/main_wan21t2v.py # Rectified SpaAttn with 1.68× speedup
-python scripts/main_wan21t2v.py --enable_teacache # Rectified SpaAttn+TeaCache with 4.61× speedup
+python scripts/main_wan21t2v.py --enable_teacache # Rectified SpaAttn+Cache with 4.61× speedup
 
 # Image-to-Video
 python scripts/main_wan21i2v.py # Rectified SpaAttn with 1.81× speedup
-python scripts/main_wan21i2v.py --enable_teacache # Rectified SpaAttn+TeaCache with 8.97× speedup
+python scripts/main_wan21i2v.py --enable_teacache # Rectified SpaAttn+Cache with 8.97× speedup
 ```
 
 ### Flux.1-dev
@@ -78,7 +81,19 @@ python scripts/main_wan21i2v.py --enable_teacache # Rectified SpaAttn+TeaCache w
 The running scripts are:
 ```bash
 python scripts/main_upflux.py  # Rectified SpaAttn with 1.60× speedup
-python scripts/main_upflux.py --enable_teacache # Rectified SpaAttn+TeaCache with 4.15× speedup
+python scripts/main_upflux.py --enable_teacache # Rectified SpaAttn+Cache with 4.15× speedup
+```
+
+### CogVideoX1.5
+The running scripts are:
+```bash
+# Text-to-Video
+python scripts/main_cogvideox.py --generate_type t2v --sa_drop_rate 0.85 # Rectified SpaAttn with 1.76× speedup
+python scripts/main_cogvideox.py --generate_type t2v --sa_drop_rate 0.85 --enable_teacache # Rectified SpaAttn+Cache with 2.97× speedup
+
+# Image-to-Video
+python scripts/main_cogvideox.py --generate_type i2v --sa_drop_rate 0.75 # Rectified SpaAttn with 1.60× speedup
+python scripts/main_cogvideox.py --generate_type i2v --sa_drop_rate 0.75 --enable_teacache # Rectified SpaAttn+Cache with 2.90× speedup
 ```
 
 ## 📊 Evaluation Pipeline

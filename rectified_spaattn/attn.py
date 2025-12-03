@@ -17,7 +17,7 @@ from torch.nn.attention import sdpa_kernel, SDPBackend
 
 MEMORY_LAYOUT = {
     "flash": (
-        lambda x: x.transpose(1, 2).view(x.shape[0] * x.shape[2], x.shape[1], x.shape[3]),
+        lambda x: x.transpose(1, 2).reshape(x.shape[0] * x.shape[2], x.shape[1], x.shape[3]),
         lambda x: x.transpose(1, 2),
     ),
     "torch": (

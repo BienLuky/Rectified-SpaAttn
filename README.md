@@ -11,8 +11,9 @@
 
 
 ## 🔥 News
-- [2025/12] Rectified SpaAttn is extended to CogVideoX1.5, achieving a 3× acceleration.
-- [2025/11] Rectified SpaAttn is open-sourced! HunyuanVideo, Wan2.1, and Flux.1-dev can be accelerated by 4-9×.
+- [**2025/12**] Rectified SpaAttn is extended to Wan2.2 (TI2V / I2V / T2V), achieving a 4-5× acceleration.
+- [**2025/12**] Rectified SpaAttn is extended to CogVideoX1.5 (I2V / T2V), achieving a 3× acceleration.
+- [**2025/11**] Rectified SpaAttn is open-sourced! HunyuanVideo, Wan2.1 (I2V / T2V), and Flux.1-dev can be accelerated by 4-9×.
 
 ## 📖 Overview
 Rectified SpaAttn rectifies sparse attention allocation with implicit full attention reference, thereby enhancing the alignment between sparse and full attention maps.
@@ -24,8 +25,7 @@ Rectified SpaAttn rectifies sparse attention allocation with implicit full atten
 
 - Model Adaptation
   - [ ] Your models ☺️ 
-  - [ ] Flux.2 
-  - [ ] Wan2.2 (I2V / T2V)
+  - [x] Wan2.2 (TI2V / I2V / T2V)
   - [x] CogVideoX1.5 (I2V / T2V)
   - [x] HunyuanVideo, Wan2.1 (I2V / T2V), Flux.1-dev
 - Engineering Optimization
@@ -56,45 +56,7 @@ pip install flash-attn --no-build-isolation
 
 ## 🚀 Inference Examples
 
-### HunyuanVideo
-
-The running scripts are:
-```bash
-python scripts/main_hunyuan.py  # Rectified SpaAttn with 2.50× speedup
-python scripts/main_hunyuan.py --enable_teacache # Rectified SpaAttn+Cache with 5.24× speedup
-```
-
-### Wan 2.1
-The running scripts are:
-```bash
-# Text-to-Video
-python scripts/main_wan21t2v.py # Rectified SpaAttn with 1.68× speedup
-python scripts/main_wan21t2v.py --enable_teacache # Rectified SpaAttn+Cache with 4.61× speedup
-
-# Image-to-Video
-python scripts/main_wan21i2v.py # Rectified SpaAttn with 1.81× speedup
-python scripts/main_wan21i2v.py --enable_teacache # Rectified SpaAttn+Cache with 8.97× speedup
-```
-
-### Flux.1-dev
-
-The running scripts are:
-```bash
-python scripts/main_upflux.py  # Rectified SpaAttn with 1.60× speedup
-python scripts/main_upflux.py --enable_teacache # Rectified SpaAttn+Cache with 4.15× speedup
-```
-
-### CogVideoX1.5
-The running scripts are:
-```bash
-# Text-to-Video
-python scripts/main_cogvideox.py --generate_type t2v --sa_drop_rate 0.85 # Rectified SpaAttn with 1.76× speedup
-python scripts/main_cogvideox.py --generate_type t2v --sa_drop_rate 0.85 --enable_teacache # Rectified SpaAttn+Cache with 2.97× speedup
-
-# Image-to-Video
-python scripts/main_cogvideox.py --generate_type i2v --sa_drop_rate 0.75 # Rectified SpaAttn with 1.60× speedup
-python scripts/main_cogvideox.py --generate_type i2v --sa_drop_rate 0.75 --enable_teacache # Rectified SpaAttn+Cache with 2.90× speedup
-```
+We provide detailed inference examples in [Inference.md](./scripts/Inference.md).
 
 ## 📊 Evaluation Pipeline
 
@@ -201,14 +163,11 @@ We provide a complete evaluation pipeline — including tool preparation, model 
 
 If you find [Rectified SpaAttn](https://arxiv.org/abs/2511.19835) is useful in your research or applications, please consider giving us a star 🌟 and citing it by the following BibTeX entry.
 ```BibTeX
-@misc{liu2025rectifiedspaattnrevisitingattention,
-      title={Rectified SpaAttn: Revisiting Attention Sparsity for Efficient Video Generation}, 
-      author={Xuewen Liu and Zhikai Li and Jing Zhang and Mengjuan Chen and Qingyi Gu},
-      year={2025},
-      eprint={2511.19835},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2511.19835}, 
+@article{liu2025rectified,
+  title={Rectified SpaAttn: Revisiting Attention Sparsity for Efficient Video Generation},
+  author={Liu, Xuewen and Li, Zhikai and Zhang, Jing and Chen, Mengjuan and Gu, Qingyi},
+  journal={arXiv preprint arXiv:2511.19835},
+  year={2025}
 }
 ```
 

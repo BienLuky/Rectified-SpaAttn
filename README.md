@@ -49,7 +49,7 @@ conda create -n rectified python==3.10.19
 conda activate rectified
 
 pip install PyTorch # We recommend using CUDA versions 12.4 / 12.8 + PyTorch versions 2.5.1 / 2.6.0
-pip install -r requirements # Install other packages
+pip install -r requirements.txt # Install other packages
 pip install flash-attn --no-build-isolation
 
 ```

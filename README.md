@@ -11,6 +11,7 @@
 
 
 ## 🔥 News
+- [**2025/12**] Rectified SpaAttn is further optimized with INT8 attention quantization, increasing the acceleration to 6.1× on HunyuanVideo, 5.3× on Wan2.1-T2V, and 4.5× on Flux.1-dev.
 - [**2025/12**] Rectified SpaAttn is extended to Wan2.2 (TI2V / I2V / T2V), achieving a 4-5× acceleration.
 - [**2025/12**] Rectified SpaAttn is extended to CogVideoX1.5 (I2V / T2V), achieving a 3× acceleration.
 - [**2025/11**] Rectified SpaAttn is open-sourced! HunyuanVideo, Wan2.1 (I2V / T2V), and Flux.1-dev can be accelerated by 4-9×.
@@ -29,9 +30,8 @@ Rectified SpaAttn rectifies sparse attention allocation with implicit full atten
   - [x] CogVideoX1.5 (I2V / T2V)
   - [x] HunyuanVideo, Wan2.1 (I2V / T2V), Flux.1-dev
 - Engineering Optimization
-  - [ ] FP8 Attention
+  - [x] Attention Quantization
   - [ ] RoPE & Norm Kernel
-  - [ ] FA3 Adaptation
 
 We warmly welcome and sincerely appreciate contributions from the community to further enhance Rectified SpaAttn. 
 If your generative model is hindered by attention latency, please feel free to contact us—we are more than willing to help integrate Rectified SpaAttn into your model.
@@ -53,6 +53,7 @@ pip install -r requirements.txt # Install other packages
 pip install flash-attn --no-build-isolation
 
 ```
+Note: Because the architectures of the open-source models vary across `diffusers` releases, we recommend `diffusers==0.34.0` for HunyuanVideo, Wan2.1-T2V, Flux-dev, and CogVideo, and `diffusers==0.35.2` for Wan2.2.
 
 ## 🚀 Inference Examples
 
@@ -173,5 +174,5 @@ If you find [Rectified SpaAttn](https://arxiv.org/abs/2511.19835) is useful in y
 
 ## 💙 Acknowledgements
 
-We would like to thank the contributors to the [HunyuanVideo](https://github.com/Tencent/HunyuanVideo), [Wan2.1](https://github.com/Wan-Video/Wan2.1), [Flux.1-dev](https://huggingface.co/jasperai/Flux.1-dev-Controlnet-Upscaler), [Jenga](https://github.com/dvlab-research/Jenga), [TeaCache](https://github.com/ali-vilab/TeaCache) and [HuggingFace](https://huggingface.co) repositories, for their open research and exploration.
+We would like to thank the contributors to the [HunyuanVideo](https://github.com/Tencent/HunyuanVideo), [Wan2.1](https://github.com/Wan-Video/Wan2.1), [Flux.1-dev](https://huggingface.co/jasperai/Flux.1-dev-Controlnet-Upscaler), [Jenga](https://github.com/dvlab-research/Jenga), [TeaCache](https://github.com/ali-vilab/TeaCache), [SageAttention](https://github.com/thu-ml/SageAttention) and [HuggingFace](https://huggingface.co) repositories, for their open research and exploration.
 

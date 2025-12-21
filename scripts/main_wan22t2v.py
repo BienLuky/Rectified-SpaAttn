@@ -1,6 +1,6 @@
 import os, argparse, sys
 sys.path.append("../Rectified-SpaAttn")
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 import torch
 from diffusers import AutoencoderKLWan, WanPipeline
 from diffusers.schedulers.scheduling_unipc_multistep import UniPCMultistepScheduler
@@ -9,7 +9,8 @@ from rectified_spaattn.rectified_wan22_attn import RectifiedWanT2VSpaAttnProcess
 from rectified_spaattn.attn_processor import get_attn_processors, set_attn_processor
 from utils.seed import set_seed
 import utils.variable as va
-from scripts.main_wan22ti2v import build_multi_curve, teacache_forward
+from utils.jenga_reorder import build_multi_curve
+from scripts.main_wan22ti2v import teacache_forward
 
 import types
 import math
@@ -33,13 +34,14 @@ def parse_args():
     parser.add_argument("--width", type=int, default=1280, help="video width.")
     parser.add_argument("--frame", type=int, default=81, help="video frames.")
     parser.add_argument("--num_steps", type=int, default=40, help="Number of diffusion sampling steps.")
-    parser.add_argument("--sa_drop_rate", type=float, default=0.85, help="Drop rate for sparse attention.")
+    parser.add_argument("--sa_drop_rate", type=float, default=0.75, help="Drop rate for sparse attention.")
     parser.add_argument("--p_remain_rates", type=float, default=0.3, help="Probability for keeping tokens.")
     parser.add_argument("--enable_teacache", action="store_true", help="Enable teacher-cache acceleration.")
     parser.add_argument("--teacache_thresh", type=float, default=0.2, help="TeaCache thresh sparams.")
-    parser.add_argument("--mode", type=str, default="flash", choices=["sparse", "flash", "torch", "vanilla"], help="Inference mode.")
+    parser.add_argument("--mode", type=str, default="sparse", choices=["sparse", "flash", "torch", "vanilla"], help="Inference mode.")
     parser.add_argument("--use_ret_steps",action="store_true",default=True,
         help="Using Retention Steps will result in faster generation speed and better generation quality.")
+    parser.add_argument("--use_sage",action="store_true", help="Enable sageattention acceleration.")
     args = parser.parse_args()
     return args
 
@@ -139,7 +141,7 @@ if __name__ == "__main__":
     processors_id = 0
     for k,v in get_attn_processors(pipe.transformer).items():
         if "attn1" in k:
-            attn_processors[k] = RectifiedWanT2VSpaAttnProcessor2_0(args.mode, select_block_num, hilbert_params[0][2], p_remain_rates, processors_id, first_frame_blocks, warm_steps=3*2)
+            attn_processors[k] = RectifiedWanT2VSpaAttnProcessor2_0(args.mode, select_block_num, hilbert_params[0][2], p_remain_rates, processors_id, first_frame_blocks, warm_steps=3*2, sage=args.use_sage)
         elif "attn2" in k:
             attn_processors[k] = RectifiedWanT2VSpaAttnProcessor2_0("flash", select_block_num, hilbert_params[0][2], p_remain_rates, processors_id) 
             processors_id += 1  
@@ -148,7 +150,7 @@ if __name__ == "__main__":
     attn_processors = {}
     for k,v in get_attn_processors(pipe.transformer_2).items():
         if "attn1" in k:
-            attn_processors[k] = RectifiedWanT2VSpaAttnProcessor2_0(args.mode, select_block_num, hilbert_params[0][2], p_remain_rates, processors_id, first_frame_blocks, warm_steps=transformer_steps * 2+2)
+            attn_processors[k] = RectifiedWanT2VSpaAttnProcessor2_0(args.mode, select_block_num, hilbert_params[0][2], p_remain_rates, processors_id, first_frame_blocks, warm_steps=transformer_steps * 2+2, sage=args.use_sage)
         elif "attn2" in k:
             attn_processors[k] = RectifiedWanT2VSpaAttnProcessor2_0("flash", select_block_num, hilbert_params[0][2], p_remain_rates, processors_id) 
             processors_id += 1  

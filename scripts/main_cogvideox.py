@@ -7,7 +7,7 @@ from datetime import datetime
 import time
 
 from rectified_spaattn.rectified_cogvideo_attn import RectifiedCogVideoXVideoSpaAttnProcessor2_0
-from utils.jenga_gilbert import gilbert_mapping, gilbert_block_neighbor_mapping
+from utils.jenga_reorder import build_multi_curve
 from utils.seed import set_seed
 import utils.variable as va
 
@@ -24,22 +24,6 @@ coefficients_dict = {
     "CogVideoX1.5-5B":[ 2.50210439e+02, -1.65061612e+02,  3.57804877e+01, -7.81551492e-01, 3.58559703e-02],
     "CogVideoX1.5-5B-I2V":[ 1.22842302e+02, -1.04088754e+02,  2.62981677e+01, -3.06009921e-01, 3.71213220e-02],
 }
-
-
-def build_multi_curve(latent_time, latent_height, latent_width, axis_order_list):
-    curve_sels = []
-    latent_time_ = int(latent_time)
-    latent_height_ = int(latent_height)
-    latent_width_ = int(latent_width)
-    if (latent_height_ * latent_width_) % 4 != 0:
-        raise ValueError(f"latent_height_ * latent_width_ must be divisible by 4, but got {latent_height_ * latent_width_}")
-    
-    for axis_order in axis_order_list:
-        LINEAR_TO_HILBERT, HILBERT_ORDER = gilbert_mapping(latent_time_, latent_height_, latent_width_, axis_order=axis_order)
-        block_neighbor_list = gilbert_block_neighbor_mapping(latent_time_, latent_height_, latent_width_, axis_order=axis_order)
-        curve_sels.append([torch.tensor(LINEAR_TO_HILBERT, dtype=torch.long, device='cuda'), torch.tensor(HILBERT_ORDER, dtype=torch.long, device='cuda'), block_neighbor_list])
-
-    return curve_sels
 
 
 def teacache_forward(
@@ -200,10 +184,10 @@ def teacache_forward(
 def main(args):
     seed = args.seed
     set_seed(seed)
+    num_inference_steps = args.num_inference_steps
     rel_l1_thresh = args.rel_l1_thresh
     generate_type = args.generate_type
     negative_prompt = args.negative_prompt
-    num_inference_steps = args.num_inference_steps
     height = args.height
     width = args.width
     num_frames = args.num_frames
@@ -212,16 +196,17 @@ def main(args):
 
     if generate_type == "t2v":
         ckpts_path = "THUDM/CogVideoX1.5-5B"
+        mode = ckpts_path.split("/")[-1]
         prompt = args.prompt_t2v
         pipe = CogVideoXPipeline.from_pretrained(ckpts_path, torch_dtype=torch.bfloat16)
     else:
         ckpts_path = "THUDM/CogVideoX1.5-5B-I2V"
+        mode = ckpts_path.split("/")[-1]
         prompt = args.prompt_i2v
         image_path = args.image_path
         pipe = CogVideoXImageToVideoPipeline.from_pretrained(ckpts_path, torch_dtype=torch.bfloat16)
         image = load_image(image=image_path)
 
-    mode = ckpts_path.split("/")[-1]
     # Jenga
     latent_time_, latent_height_, latent_width_ = (num_frames-1) // 8 + 1, height // 16, width // 16
     axis_order_list = [("w","h","t")]
@@ -308,7 +293,7 @@ if __name__ == "__main__":
     parser.add_argument('--prompt_t2v', type=str, default="A clear, turquoise river flows through a rocky canyon, cascading over a small waterfall and forming a pool of water at the bottom.The river is the main focus of the scene, with its clear water reflecting the surrounding trees and rocks. The canyon walls are steep and rocky, with some vegetation growing on them. The trees are mostly pine trees, with their green needles contrasting with the brown and gray rocks. The overall tone of the scene is one of peace and tranquility.", help='Description of the text-2-video for the model to generate')
     parser.add_argument('--prompt_i2v', type=str, default="a boat sits on the shore of a lake with mt fuji in the background.", help='Description of the image-2-video for the model to generate')
     parser.add_argument("--image_path",type=str,default='./assets/a boat sits on the shore of a lake with mt fuji in the background.jpg',help="The path of the image to be used as the background of the video")
-    parser.add_argument("--generate_type", type=str, default="t2v", help="The type of video generation (e.g., 't2v', 'i2v')")
+    parser.add_argument("--generate_type", type=str, default="i2v", help="The type of video generation (e.g., 't2v', 'i2v')")
 
     parser.add_argument("--sa_drop_rate", type=float, default=0.75, help="Drop rate for sparse attention.")
     parser.add_argument("--p_remain_rates", type=float, default=0.3, help="Probability for keeping tokens.")

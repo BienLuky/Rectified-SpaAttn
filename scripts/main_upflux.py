@@ -7,7 +7,7 @@ from diffusers import FluxPipeline, FluxControlNetModel
 from diffusers.pipelines import FluxControlNetPipeline
 
 from rectified_spaattn.rectified_flux_attn import RectifiedFluxSpaAttnProcessor2_0
-from utils.jenga_gilbert import gilbert_mapping, gilbert_block_neighbor_mapping
+from utils.jenga_reorder import build_multi_curve
 from utils.seed import set_seed
 import utils.variable as va
 
@@ -17,28 +17,6 @@ from typing import Any, List, Tuple, Optional, Union, Dict
 from diffusers.utils import USE_PEFT_BACKEND, logging, scale_lora_layers, unscale_lora_layers
 from diffusers.models.modeling_outputs import Transformer2DModelOutput
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
-
-
-def build_multi_curve(latent_time, latent_height, latent_width, axis_order_list):
-    curve_sels = []
-    latent_time_ = int(latent_time)
-    latent_height_ = int(latent_height)
-    latent_width_ = int(latent_width)
-    if (latent_height_ * latent_width_) % 4 != 0:
-        raise ValueError(f"latent_height_ * latent_width_ must be divisible by 4, but got {latent_height_ * latent_width_}")
-    
-    for axis_order in axis_order_list:
-        LINEAR_TO_HILBERT, HILBERT_ORDER = gilbert_mapping(latent_time_, latent_height_, latent_width_, axis_order=axis_order)
-        block_neighbor_list = gilbert_block_neighbor_mapping(latent_time_, latent_height_, latent_width_, axis_order=axis_order)
-
-        # # linear settings.
-        # LINEAR_TO_HILBERT = torch.arange(latent_time_ * latent_height_ * latent_width_, dtype=torch.long) # linear
-        # HILBERT_ORDER = torch.arange(latent_time_ * latent_height_ * latent_width_, dtype=torch.long) # linear
-        # block_neighbor_list = torch.zeros((math.ceil(latent_time_ * latent_height_ * latent_width_ / 128), math.ceil(latent_time_ * latent_height_ * latent_width_ / 128)), dtype=torch.bool)
-        
-        curve_sels.append([torch.tensor(LINEAR_TO_HILBERT, dtype=torch.long, device='cuda'), torch.tensor(HILBERT_ORDER, dtype=torch.long, device='cuda'), block_neighbor_list])
-
-    return curve_sels
 
 
 def teacache_forward(
@@ -276,6 +254,7 @@ def parse_args():
     parser.add_argument("--enable_teacache", action="store_true", help="Enable teacher-cache acceleration.")
     parser.add_argument("--rel_l1_thresh", type=float, default=0.8, help="TeaCache thresh sparams (0.25 for 1.5x speedup, 0.4 for 1.8x speedup, 0.6 for 2.0x speedup, 0.8 for 2.25x speedup).")
     parser.add_argument("--mode", type=str, default="sparse", choices=["sparse", "flash", "torch", "vanilla"], help="Inference mode.")
+    parser.add_argument("--use_sage",action="store_true", help="Enable sageattention acceleration.")
     args = parser.parse_args()
     return args
 
@@ -353,10 +332,10 @@ if __name__ == "__main__":
     processors_id = 0
     for k,v in pipe.transformer.attn_processors.items():
         if "single_transformer_blocks" in k:
-            attn_processors[k] = RectifiedFluxSpaAttnProcessor2_0(args.mode, select_block_num, hilbert_params[0][2], p_remain_rates, processors_id, text_length)
+            attn_processors[k] = RectifiedFluxSpaAttnProcessor2_0(args.mode, select_block_num, hilbert_params[0][2], p_remain_rates, processors_id, text_length, sage=args.use_sage)
             processors_id += 1 
         else:
-            attn_processors[k] = RectifiedFluxSpaAttnProcessor2_0(args.mode, select_block_num, hilbert_params[0][2], p_remain_rates, processors_id, text_length)
+            attn_processors[k] = RectifiedFluxSpaAttnProcessor2_0(args.mode, select_block_num, hilbert_params[0][2], p_remain_rates, processors_id, text_length, sage=args.use_sage)
             processors_id += 1  
     pipe.transformer.set_attn_processor(attn_processors)
 

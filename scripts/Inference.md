@@ -6,7 +6,7 @@ Rectified SpaAttn currently supports Wan2.2 (TI2V / I2V / T2V), CogVideoX1.5 (I2
 
 - --sa_drop_rate: Sparsity ratio, specifies the ratio of attention blocks removed during sparse attention. Higher values correspond to more aggressive sparsification.
 - --enable_teacache: Caching flag, activate model–cache fusion, yielding faster inference.
-
+- --use_sage: SageAttention flag, activate SageAttention1 fusion, yielding faster inference.
 
 ### HunyuanVideo (720×1280, 128 frames)
 

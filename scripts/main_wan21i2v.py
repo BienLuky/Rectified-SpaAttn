@@ -1,6 +1,6 @@
 import os, argparse, sys
 sys.path.append("../Rectified-SpaAttn")
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 import torch
 from diffusers import AutoencoderKLWan, WanImageToVideoPipeline
 from diffusers.utils import load_image
@@ -8,7 +8,7 @@ from transformers import CLIPVisionModel
 
 from rectified_spaattn.rectified_wan21_attn import RectifiedWanI2VSpaAttnProcessor2_0
 from rectified_spaattn.attn_processor import get_attn_processors, set_attn_processor
-from utils.jenga_gilbert import gilbert_mapping, gilbert_block_neighbor_mapping
+from utils.jenga_reorder import build_multi_curve
 from utils.seed import set_seed
 from utils.save_video import save_videos_grid
 import utils.variable as va
@@ -21,28 +21,6 @@ from typing import Any, List, Tuple, Optional, Union, Dict
 from diffusers.utils import USE_PEFT_BACKEND, logging, scale_lora_layers, unscale_lora_layers
 from diffusers.models.modeling_outputs import Transformer2DModelOutput
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
-
-
-def build_multi_curve(latent_time, latent_height, latent_width, axis_order_list):
-    curve_sels = []
-    latent_time_ = int(latent_time)
-    latent_height_ = int(latent_height)
-    latent_width_ = int(latent_width)
-    if (latent_height_ * latent_width_) % 4 != 0:
-        raise ValueError(f"latent_height_ * latent_width_ must be divisible by 4, but got {latent_height_ * latent_width_}")
-    
-    for axis_order in axis_order_list:
-        LINEAR_TO_HILBERT, HILBERT_ORDER = gilbert_mapping(latent_time_, latent_height_, latent_width_, axis_order=axis_order)
-        block_neighbor_list = gilbert_block_neighbor_mapping(latent_time_, latent_height_, latent_width_, axis_order=axis_order)
-
-        # # linear settings.
-        # LINEAR_TO_HILBERT = torch.arange(latent_time_ * latent_height_ * latent_width_, dtype=torch.long) # linear
-        # HILBERT_ORDER = torch.arange(latent_time_ * latent_height_ * latent_width_, dtype=torch.long) # linear
-        # block_neighbor_list = torch.zeros((math.ceil(latent_time_ * latent_height_ * latent_width_ / 128), math.ceil(latent_time_ * latent_height_ * latent_width_ / 128)), dtype=torch.bool)
-        
-        curve_sels.append([torch.tensor(LINEAR_TO_HILBERT, dtype=torch.long, device='cuda'), torch.tensor(HILBERT_ORDER, dtype=torch.long, device='cuda'), block_neighbor_list])
-
-    return curve_sels
 
 
 def teacache_forward(
@@ -218,6 +196,7 @@ def parse_args():
     parser.add_argument("--mode", type=str, default="sparse", choices=["sparse", "flash", "torch", "vanilla"], help="Inference mode.")
     parser.add_argument("--use_ret_steps",action="store_true",default=True,
         help="Using Retention Steps will result in faster generation speed and better generation quality.")
+    parser.add_argument("--use_sage",action="store_true", help="Enable sageattention acceleration.")
     args = parser.parse_args()
     return args
 
@@ -297,7 +276,7 @@ if __name__ == "__main__":
     processors_id = 0
     for k,v in get_attn_processors(pipe.transformer).items():
         if "attn1" in k:
-            attn_processors[k] = RectifiedWanI2VSpaAttnProcessor2_0(args.mode, select_block_num, hilbert_params[0][2], p_remain_rates, processors_id, first_frame_blocks)
+            attn_processors[k] = RectifiedWanI2VSpaAttnProcessor2_0(args.mode, select_block_num, hilbert_params[0][2], p_remain_rates, processors_id, first_frame_blocks, sage=args.use_sage)
         elif "attn2" in k:
             attn_processors[k] = RectifiedWanI2VSpaAttnProcessor2_0("flash", select_block_num, hilbert_params[0][2], p_remain_rates, processors_id)
             processors_id += 1   

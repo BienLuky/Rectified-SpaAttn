@@ -10,10 +10,11 @@ from torch.nn.attention import sdpa_kernel, SDPBackend
 
 from .attn import fullattn
 from .rectified_wan21_attn import rectified_block_sparse_attention
+from .sageattention.core import sageattn
 
 
 class RectifiedWanTI2VSpaAttnProcessor2_0:
-    def __init__(self, mode, select_block_num, block_neighbor_list, p_remain_rates, processor_id=0, first_frame_blocks=0):
+    def __init__(self, mode, select_block_num, block_neighbor_list, p_remain_rates, processor_id=0, first_frame_blocks=0, sage=False):
         self.mode = mode
         self.select_block_num = select_block_num
         self.block_neighbor_list = block_neighbor_list
@@ -21,6 +22,7 @@ class RectifiedWanTI2VSpaAttnProcessor2_0:
         self.current_step = 0
         self.processor_id = processor_id
         self.first_frame_blocks = first_frame_blocks
+        self.sage = sage
 
         if not hasattr(F, "scaled_dot_product_attention"):
             raise ImportError("WanAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.")
@@ -74,21 +76,6 @@ class RectifiedWanTI2VSpaAttnProcessor2_0:
             key_img, value_img = _get_added_kv_projections(attn, encoder_hidden_states_img)
             key_img = attn.norm_added_k(key_img)
 
-            # key_img = key_img.unflatten(2, (attn.heads, -1))
-            # value_img = value_img.unflatten(2, (attn.heads, -1))
-
-            # hidden_states_img = dispatch_attention_fn(
-            #     query,
-            #     key_img,
-            #     value_img,
-            #     attn_mask=None,
-            #     dropout_p=0.0,
-            #     is_causal=False,
-            #     backend=self._attention_backend,
-            # )
-            # hidden_states_img = hidden_states_img.flatten(2, 3)
-            # hidden_states_img = hidden_states_img.type_as(query)
-
             key_img = key_img.unflatten(2, (attn.heads, -1)).transpose(1, 2)
             value_img = value_img.unflatten(2, (attn.heads, -1)).transpose(1, 2)
             with sdpa_kernel(backends=[SDPBackend.FLASH_ATTENTION]):
@@ -97,18 +84,6 @@ class RectifiedWanTI2VSpaAttnProcessor2_0:
                 )
             hidden_states_img = hidden_states_img.transpose(1, 2).flatten(2, 3)
             hidden_states_img = hidden_states_img.type_as(query)
-
-        # hidden_states = dispatch_attention_fn(
-        #     query,
-        #     key,
-        #     value,
-        #     attn_mask=attention_mask,
-        #     dropout_p=0.0,
-        #     is_causal=False,
-        #     backend=self._attention_backend,
-        # )
-        # hidden_states = hidden_states.flatten(2, 3)
-        # hidden_states = hidden_states.type_as(query)
 
         # Attention
         query, key, value = query.transpose(1, 2), key.transpose(1, 2), value.transpose(1, 2)
@@ -131,20 +106,29 @@ class RectifiedWanTI2VSpaAttnProcessor2_0:
                 max_seqlen_kv=max_seqlen_kv,
                 block_neighbor_list=self.block_neighbor_list,
                 p_remain_rates=self.p_remain_rates,
-                first_frame_blocks=self.first_frame_blocks
+                first_frame_blocks=self.first_frame_blocks,
+                sage=self.sage
             )
 
         elif self.mode == "sparse":
-            hidden_states = fullattn(
-                query, key, value, mode="flash", drop_rate=0.0, attn_mask=attention_mask, causal=False, \
-                cu_seqlens_q=cu_seqlens_q, cu_seqlens_kv=cu_seqlens_kv, max_seqlen_q=max_seqlen_q, max_seqlen_kv=max_seqlen_kv, batch_size=B)
-            hidden_states = hidden_states.transpose(1, 2).reshape(B, S_q, -1)
+            if self.sage:
+                hidden_states = sageattn(query, key, value, tensor_layout="HND", is_causal=False)
+                hidden_states = hidden_states.transpose(1, 2).flatten(2, 3)
+            else:
+                hidden_states = fullattn(
+                    query, key, value, mode="flash", drop_rate=0.0, attn_mask=attention_mask, causal=False, \
+                    cu_seqlens_q=cu_seqlens_q, cu_seqlens_kv=cu_seqlens_kv, max_seqlen_q=max_seqlen_q, max_seqlen_kv=max_seqlen_kv, batch_size=B)
+                hidden_states = hidden_states.transpose(1, 2).reshape(B, S_q, -1)
 
         elif self.mode in ["flash", "torch", "vanilla"]:
-            hidden_states = fullattn(
-                query, key, value, mode=self.mode, drop_rate=0.0, attn_mask=attention_mask, causal=False, \
-                cu_seqlens_q=cu_seqlens_q, cu_seqlens_kv=cu_seqlens_kv, max_seqlen_q=max_seqlen_q, max_seqlen_kv=max_seqlen_kv, batch_size=B)
-            hidden_states = hidden_states.transpose(1, 2).reshape(B, S_q, -1)
+            if self.sage:
+                hidden_states = sageattn(query, key, value, tensor_layout="HND", is_causal=False)
+                hidden_states = hidden_states.transpose(1, 2).flatten(2, 3)
+            else:
+                hidden_states = fullattn(
+                    query, key, value, mode=self.mode, drop_rate=0.0, attn_mask=attention_mask, causal=False, \
+                    cu_seqlens_q=cu_seqlens_q, cu_seqlens_kv=cu_seqlens_kv, max_seqlen_q=max_seqlen_q, max_seqlen_kv=max_seqlen_kv, batch_size=B)
+                hidden_states = hidden_states.transpose(1, 2).reshape(B, S_q, -1)
 
         else:
             raise ImportError("Undefined Attention Processor! Just support sparse, flash, torch, vanilla.")
@@ -164,7 +148,7 @@ class RectifiedWanTI2VSpaAttnProcessor2_0:
 
 
 class RectifiedWanT2VSpaAttnProcessor2_0:
-    def __init__(self, mode, select_block_num, block_neighbor_list, p_remain_rates, processor_id=0, first_frame_blocks=0, warm_steps=0):
+    def __init__(self, mode, select_block_num, block_neighbor_list, p_remain_rates, processor_id=0, first_frame_blocks=0, warm_steps=0, sage=False):
         self.mode = mode
         self.select_block_num = select_block_num
         self.block_neighbor_list = block_neighbor_list
@@ -173,6 +157,7 @@ class RectifiedWanT2VSpaAttnProcessor2_0:
         self.processor_id = processor_id
         self.first_frame_blocks = first_frame_blocks
         self.warm_steps = warm_steps
+        self.sage = sage
 
         if not hasattr(F, "scaled_dot_product_attention"):
             raise ImportError("WanAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.")
@@ -256,20 +241,29 @@ class RectifiedWanT2VSpaAttnProcessor2_0:
                 max_seqlen_kv=max_seqlen_kv,
                 block_neighbor_list=self.block_neighbor_list,
                 p_remain_rates=self.p_remain_rates,
-                first_frame_blocks=self.first_frame_blocks
+                first_frame_blocks=self.first_frame_blocks,
+                sage=self.sage
             )
 
         elif self.mode == "sparse":
-            hidden_states = fullattn(
-                query, key, value, mode="flash", drop_rate=0.0, attn_mask=attention_mask, causal=False, \
-                cu_seqlens_q=cu_seqlens_q, cu_seqlens_kv=cu_seqlens_kv, max_seqlen_q=max_seqlen_q, max_seqlen_kv=max_seqlen_kv, batch_size=B)
-            hidden_states = hidden_states.transpose(1, 2).reshape(B, S_q, -1)
+            if self.sage:
+                hidden_states = sageattn(query, key, value, tensor_layout="HND", is_causal=False)
+                hidden_states = hidden_states.transpose(1, 2).flatten(2, 3)
+            else:
+                hidden_states = fullattn(
+                    query, key, value, mode="flash", drop_rate=0.0, attn_mask=attention_mask, causal=False, \
+                    cu_seqlens_q=cu_seqlens_q, cu_seqlens_kv=cu_seqlens_kv, max_seqlen_q=max_seqlen_q, max_seqlen_kv=max_seqlen_kv, batch_size=B)
+                hidden_states = hidden_states.transpose(1, 2).reshape(B, S_q, -1)
 
         elif self.mode in ["flash", "torch", "vanilla"]:
-            hidden_states = fullattn(
-                query, key, value, mode=self.mode, drop_rate=0.0, attn_mask=attention_mask, causal=False, \
-                cu_seqlens_q=cu_seqlens_q, cu_seqlens_kv=cu_seqlens_kv, max_seqlen_q=max_seqlen_q, max_seqlen_kv=max_seqlen_kv, batch_size=B)
-            hidden_states = hidden_states.transpose(1, 2).reshape(B, S_q, -1)
+            if self.sage:
+                hidden_states = sageattn(query, key, value, tensor_layout="HND", is_causal=False)
+                hidden_states = hidden_states.transpose(1, 2).flatten(2, 3)
+            else:
+                hidden_states = fullattn(
+                    query, key, value, mode=self.mode, drop_rate=0.0, attn_mask=attention_mask, causal=False, \
+                    cu_seqlens_q=cu_seqlens_q, cu_seqlens_kv=cu_seqlens_kv, max_seqlen_q=max_seqlen_q, max_seqlen_kv=max_seqlen_kv, batch_size=B)
+                hidden_states = hidden_states.transpose(1, 2).reshape(B, S_q, -1)
 
         else:
             raise ImportError("Undefined Attention Processor! Just support sparse, flash, torch, vanilla.")
@@ -289,7 +283,7 @@ class RectifiedWanT2VSpaAttnProcessor2_0:
 
 
 class RectifiedWanI2VSpaAttnProcessor2_0:
-    def __init__(self, mode, select_block_num, block_neighbor_list, p_remain_rates, processor_id=0, first_frame_blocks=0, warm_steps=0):
+    def __init__(self, mode, select_block_num, block_neighbor_list, p_remain_rates, processor_id=0, first_frame_blocks=0, warm_steps=0, sage=False):
         self.mode = mode
         self.select_block_num = select_block_num
         self.block_neighbor_list = block_neighbor_list
@@ -298,6 +292,7 @@ class RectifiedWanI2VSpaAttnProcessor2_0:
         self.processor_id = processor_id
         self.first_frame_blocks = first_frame_blocks
         self.warm_steps = warm_steps
+        self.sage = sage
 
         if not hasattr(F, "scaled_dot_product_attention"):
             raise ImportError("WanAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.")
@@ -381,20 +376,29 @@ class RectifiedWanI2VSpaAttnProcessor2_0:
                 max_seqlen_kv=max_seqlen_kv,
                 block_neighbor_list=self.block_neighbor_list,
                 p_remain_rates=self.p_remain_rates,
-                first_frame_blocks=self.first_frame_blocks
+                first_frame_blocks=self.first_frame_blocks,
+                sage=self.sage
             )
 
         elif self.mode == "sparse":
-            hidden_states = fullattn(
-                query, key, value, mode="flash", drop_rate=0.0, attn_mask=attention_mask, causal=False, \
-                cu_seqlens_q=cu_seqlens_q, cu_seqlens_kv=cu_seqlens_kv, max_seqlen_q=max_seqlen_q, max_seqlen_kv=max_seqlen_kv, batch_size=B)
-            hidden_states = hidden_states.transpose(1, 2).reshape(B, S_q, -1)
+            if self.sage:
+                hidden_states = sageattn(query, key, value, tensor_layout="HND", is_causal=False)
+                hidden_states = hidden_states.transpose(1, 2).flatten(2, 3)
+            else:
+                hidden_states = fullattn(
+                    query, key, value, mode="flash", drop_rate=0.0, attn_mask=attention_mask, causal=False, \
+                    cu_seqlens_q=cu_seqlens_q, cu_seqlens_kv=cu_seqlens_kv, max_seqlen_q=max_seqlen_q, max_seqlen_kv=max_seqlen_kv, batch_size=B)
+                hidden_states = hidden_states.transpose(1, 2).reshape(B, S_q, -1)
 
         elif self.mode in ["flash", "torch", "vanilla"]:
-            hidden_states = fullattn(
-                query, key, value, mode=self.mode, drop_rate=0.0, attn_mask=attention_mask, causal=False, \
-                cu_seqlens_q=cu_seqlens_q, cu_seqlens_kv=cu_seqlens_kv, max_seqlen_q=max_seqlen_q, max_seqlen_kv=max_seqlen_kv, batch_size=B)
-            hidden_states = hidden_states.transpose(1, 2).reshape(B, S_q, -1)
+            if self.sage:
+                hidden_states = sageattn(query, key, value, tensor_layout="HND", is_causal=False)
+                hidden_states = hidden_states.transpose(1, 2).flatten(2, 3)
+            else:
+                hidden_states = fullattn(
+                    query, key, value, mode=self.mode, drop_rate=0.0, attn_mask=attention_mask, causal=False, \
+                    cu_seqlens_q=cu_seqlens_q, cu_seqlens_kv=cu_seqlens_kv, max_seqlen_q=max_seqlen_q, max_seqlen_kv=max_seqlen_kv, batch_size=B)
+                hidden_states = hidden_states.transpose(1, 2).reshape(B, S_q, -1)
 
         else:
             raise ImportError("Undefined Attention Processor! Just support sparse, flash, torch, vanilla.")

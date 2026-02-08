@@ -11,7 +11,8 @@
 
 
 ## 🔥 News
-- [**2025/12**] Rectified SpaAttn is further optimized with INT8 attention quantization, increasing the acceleration to 6.1× on HunyuanVideo, 5.3× on Wan2.1-T2V, and 4.5× on Flux.1-dev.
+- [**2026/02**] Rectified SpaAttn is further extended to the LightX2V distilled version of Wan2.1 (I2V / T2V), enabling high-quality 5s-720p video generation within 1 minute.
+- [**2026/01**] Rectified SpaAttn is further optimized with INT8 attention quantization, increasing the acceleration to 6.1× on HunyuanVideo, 5.3× on Wan2.1-T2V, and 4.5× on Flux.1-dev.
 - [**2025/12**] Rectified SpaAttn is extended to Wan2.2 (TI2V / I2V / T2V), achieving a 4-5× acceleration.
 - [**2025/12**] Rectified SpaAttn is extended to CogVideoX1.5 (I2V / T2V), achieving a 3× acceleration.
 - [**2025/11**] Rectified SpaAttn is open-sourced! HunyuanVideo, Wan2.1 (I2V / T2V), and Flux.1-dev can be accelerated by 4-9×.
@@ -26,6 +27,7 @@ Rectified SpaAttn rectifies sparse attention allocation with implicit full atten
 
 - Model Adaptation
   - [ ] Your models ☺️ 
+  - [x] LightX2V-Wan2.1 (I2V / T2V)
   - [x] Wan2.2 (TI2V / I2V / T2V)
   - [x] CogVideoX1.5 (I2V / T2V)
   - [x] HunyuanVideo, Wan2.1 (I2V / T2V), Flux.1-dev

@@ -1,6 +1,6 @@
 ## 🚀 Inference Examples
 
-Rectified SpaAttn currently supports Wan2.2 (TI2V / I2V / T2V), CogVideoX1.5 (I2V / T2V), HunyuanVideo, Wan2.1 (I2V / T2V), and Flux.1-dev. You can use Rectified SpaAttn as follows:
+Rectified SpaAttn currently supports LightX2V-Wan2.1 (I2V / T2V), Wan2.2 (TI2V / I2V / T2V), CogVideoX1.5 (I2V / T2V), HunyuanVideo, Wan2.1 (I2V / T2V), and Flux.1-dev. You can use Rectified SpaAttn as follows:
 
 #### Inference Parameters 
 
@@ -62,4 +62,16 @@ python scripts/main_wan22t2v.py --sa_drop_rate 0.75 --enable_teacache # 3.50× s
 # I2V-A14B (720×1280, 81 frames)
 python scripts/main_wan22i2v.py --sa_drop_rate 0.85 # 2.08× speedup
 python scripts/main_wan22i2v.py --sa_drop_rate 0.75 --enable_teacache # 5.36× speedup
+```
+
+
+### LightX2V-Wan2.1 (720p, 81 frames)
+First, set up the LightX2V environment and download the required weights to ensure that the distilled LightX2V-Wan2.1 runs properly. Then, copy the `rectified_spaattn_lightx2v` directory under `scripts`, along with `main_wan21t2v_distilled.py` and `main_wan21i2v_distilled.py`, into `LightX2V/examples/wan`. Finally, run the following script:
+
+```bash
+# Text-to-Video
+python main_wan21t2v_distilled.py --sa_drop_rate 0.75 # Generate 5s-720p high quanlity video with 56 second
+
+# Image-to-Video
+python main_wan21i2v_distilled.py --sa_drop_rate 0.75 # Generate 5s-720p high quanlity video with 66 second
 ```
